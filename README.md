@@ -1,3 +1,157 @@
+# Dofbot Reacher Reinforcement Learning Sim2Real Environment for Omniverse Isaac Gym/Sim
+
+This repository adds a DofbotReacher environment based on [OmniIsaacGymEnvs](https://github.com/NVIDIA-Omniverse/OmniIsaacGymEnvs) (commit [d0eaf2e](https://github.com/NVIDIA-Omniverse/OmniIsaacGymEnvs/tree/d0eaf2e7f1e1e901d62e780392ca77843c08eb2c)), and includes Sim2Real code to control a real-world [Dofbot](https://category.yahboom.net/collections/r-robotics-arm/products/dofbot-jetson_nano) with the policy learned by reinforcement learning in Omniverse Isaac Gym/Sim.
+
+The code is tested on Isaac Sim 2022.1.1.
+
+## Preview
+
+![](docs/media/DofbotReacher-Vectorized.gif)
+
+![](docs/media/DofbotReacher-Sim2Real.gif)
+
+## Installation
+
+Prerequisites:
+- [Install Omniverse Isaac Sim 2022.1.1](https://docs.omniverse.nvidia.com/app_isaacsim/app_isaacsim/install_basic.html)
+- Your computer & GPU should be able to run the Cartpole example in [OmniIsaacGymEnvs](https://github.com/NVIDIA-Omniverse/OmniIsaacGymEnvs)
+- (Optional) [Set up a Dofbot with Jetson Nano](http://www.yahboom.net/study/Dofbot-Jetson_nano) in the real world
+
+We will use Anaconda to manage our virtual environment:
+
+1. Clone this repository:
+   ```sh
+   cd ~
+   git clone https://github.com/j3soon/OmniIsaacGymEnvs-DofbotReacher.git
+   ```
+2. Generate [instanceable](https://docs.omniverse.nvidia.com/app_isaacsim/app_isaacsim/tutorial_gym_instanceable_assets.html) Dofbot assets for training:
+
+   [Launch the Script Editor](https://docs.omniverse.nvidia.com/app_isaacsim/app_isaacsim/tutorial_gui_interactive_scripting.html#script-editor) in Isaac Sim. Copy the content in `omniisaacgymenvs/utils/usd_utils/create_instanceable_dofbot.py` and execute it inside the Script Editor window. Wait until you see the text `Done!`.
+3. [Download and Install Anaconda](https://www.anaconda.com/products/distribution#Downloads).
+   ```sh
+   # For 64-bit (x86_64/x64/amd64/intel64)
+   wget https://repo.anaconda.com/archive/Anaconda3-2022.05-Linux-x86_64.sh
+   bash Anaconda3-2022.05-Linux-x86_64.sh
+   ```
+4. Patch Isaac Sim 2022.1.1
+   ```sh
+   export ISAAC_SIM="$HOME/.local/share/ov/pkg/isaac_sim-2022.1.1"
+   cp ~/OmniIsaacGymEnvs-DofbotReacher/isaac_sim-2022.1.1-patch/setup_python_env.sh $ISAAC_SIM/setup_python_env.sh
+   ```
+5. [Set up conda environment for Isaac Sim](https://docs.omniverse.nvidia.com/app_isaacsim/app_isaacsim/install_python.html#advanced-running-with-anaconda)
+   ```sh
+   # conda remove --name isaac-sim --all
+   export ISAAC_SIM="$HOME/.local/share/ov/pkg/isaac_sim-2022.1.1"
+   cd $ISAAC_SIM
+   conda env create -f environment.yml
+   ```
+6. Activate conda environment
+   ```sh
+   export ISAAC_SIM="$HOME/.local/share/ov/pkg/isaac_sim-2022.1.1"
+   conda activate isaac-sim
+   source setup_conda_env.sh
+   ```
+
+Please note that you should execute the commands in Step 6 for every new shell.
+
+## Demo
+
+We provide an interactable demo based on the `DofbotReacher` RL example. In this demo, you can click on any of
+the Dofbot in the scene to manually control the robot with your keyboard as follows:
+
+- `Q`/`A`: Control Joint 0.
+- `W`/`S`: Control Joint 1.
+- `E`/`D`: Control Joint 2.
+- `R`/`F`: Control Joint 3.
+- `T`/`G`: Control Joint 4.
+- `Y`/`H`: Control Joint 5.
+- `ESC`: Unselect a selected Dofbot and yields manual control
+
+Launch this demo with the following command. Note that this demo limits the maximum number of Dofbot in the scene to 128.
+
+```sh
+cd ~/OmniIsaacGymEnvs-DofbotReacher
+python omniisaacgymenvs/scripts/rlgames_play.py task=DofbotReacher num_envs=64
+```
+
+## Training
+
+You can launch the training in `headless` mode as follows:
+
+```sh
+cd ~/OmniIsaacGymEnvs-DofbotReacher
+python omniisaacgymenvs/scripts/rlgames_train.py task=DofbotReacher headless=True
+```
+
+The number of environments is set to 2048 by default. If your GPU has small memory, you can decrease the number of environments by changing the arguments `num_envs` and `horizon_length` as below:
+
+```sh
+cd ~/OmniIsaacGymEnvs-DofbotReacher
+python omniisaacgymenvs/scripts/rlgames_train.py task=DofbotReacher headless=True num_envs=2048 horizon_length=64
+```
+
+You can also skip training by downloading the pre-trained model checkpoint by:
+
+```sh
+cd ~/OmniIsaacGymEnvs-DofbotReacher
+wget https://github.com/j3soon/OmniIsaacGymEnvs-DofbotReacher/releases/download/v1.0.0/runs.zip
+unzip runs.zip
+```
+
+## Testing
+
+Make sure you have model checkpoints at `~/OmniIsaacGymEnvs-DofbotReacher/runs`, you can check it with the following command:
+
+```sh
+tree ~/OmniIsaacGymEnvs-DofbotReacher/runs
+```
+
+Please note that you may not want to use the checkpoint `./runs/DofbotReacher/nn/DofbotReacher.pth` due to the randomness of the reward signal. Instead, use the latest checkpoint such as `./runs/DofbotReacher/nn/last_DofbotReacher_ep_1000_rew_XXX.pth`. You can replace `DofbotReacher.pth` with the latest checkpoint before following the steps below, or you can simply modify the commands to use the latest checkpoint.
+
+You can visualize the learned policy by the following command:
+
+```sh
+cd ~/OmniIsaacGymEnvs-DofbotReacher
+python omniisaacgymenvs/scripts/rlgames_train.py task=DofbotReacher test=True num_envs=512 checkpoint=./runs/DofbotReacher/nn/DofbotReacher.pth
+```
+
+Likewise, you can decrease the number of environments by modifying the parameter `num_envs=512`.
+
+## Sim2Real
+
+The learned policy has a very conservative constraint on the joint limits. Therefore, the gripper would not hit the ground under such limits. However, you should still make sure there are no other obstacles within Dofbot's reachable range. That being said, if things go wrong, press `Ctrl+C` twice in the terminal to kill the process.
+
+> It would be possible to remove the conservative joint limit constraints by utilizing self-collision detection in Isaac Sim. We are currently investigating this feature.
+
+For simplicity, we'll use TCP instead of ROS to control the real-world dofbot. Copy the server notebook file (`omniisaacgymenvs/sim2real/dofbot-server.ipynb`) to the Jetson Nano on your Dofbot. Launch a Jupyter Notebook on Jetson Nano and execute the server notebook file.
+
+You should be able to reset the Dofbot's joints by the following script:
+
+```sh
+cd ~/OmniIsaacGymEnvs-DofbotReacher
+python omniisaacgymenvs/sim2real/dofbot.py
+```
+
+Edit `omniisaacgymenvs/cfg/task/DofbotReacher.yaml`. Set `sim2real.enabled` to `True`, and set `sim2real.ip` to the IP of your Dofbot:
+
+```yaml
+sim2real:
+  enabled: True
+  fail_quietely: False
+  verbose: False
+  ip: <IP_OF_YOUR_DOFBOT>
+  port: 65432
+```
+
+Now you can control the real-world Dofbot in real-time by the following command:
+
+```sh
+cd ~/OmniIsaacGymEnvs-DofbotReacher
+python omniisaacgymenvs/scripts/rlgames_train.py task=DofbotReacher test=True num_envs=1 checkpoint=./runs/DofbotReacher/nn/DofbotReacher.pth
+```
+
+> **Note**: below are the original README of [OmniIsaacGymEnvs](https://github.com/NVIDIA-Omniverse/OmniIsaacGymEnvs).
+
 # Omniverse Isaac Gym Reinforcement Learning Environments for Isaac Sim
 
 ### About this repository
@@ -18,7 +172,7 @@ This repository contains Reinforcement Learning examples that can be run with th
 
 ### Installation
 
-Follow the Isaac Sim [documentation](https://docs.omniverse.nvidia.com/app_isaacsim/app_isaacsim/install_basic.html) to install the latest Isaac Sim release. 
+Follow the Isaac Sim [documentation](https://docs.omniverse.nvidia.com/app_isaacsim/app_isaacsim/install_basic.html) to install the latest Isaac Sim release.
 
 *Examples in this repository rely on features from the most recent Isaac Sim release. Please make sure to update any existing Isaac Sim build to the latest release version, 2022.1.1, to ensure examples work as expected.*
 
@@ -81,7 +235,7 @@ be optimized in future releases.
 
 ### Loading trained models // Checkpoints
 
-Checkpoints are saved in the folder `runs/EXPERIMENT_NAME/nn` where `EXPERIMENT_NAME` 
+Checkpoints are saved in the folder `runs/EXPERIMENT_NAME/nn` where `EXPERIMENT_NAME`
 defaults to the task name, but can also be overridden via the `experiment` argument.
 
 To load a trained checkpoint and continue training, use the `checkpoint` argument:
@@ -90,15 +244,15 @@ To load a trained checkpoint and continue training, use the `checkpoint` argumen
 PYTHON_PATH scripts/rlgames_train.py task=Ant checkpoint=runs/Ant/nn/Ant.pth
 ```
 
-To load a trained checkpoint and only perform inference (no training), pass `test=True` 
-as an argument, along with the checkpoint name. To avoid rendering overhead, you may 
+To load a trained checkpoint and only perform inference (no training), pass `test=True`
+as an argument, along with the checkpoint name. To avoid rendering overhead, you may
 also want to run with fewer environments using `num_envs=64`:
 
 ```bash
 PYTHON_PATH scripts/rlgames_train.py task=Ant checkpoint=runs/Ant/nn/Ant.pth test=True num_envs=64
 ```
 
-Note that if there are special characters such as `[` or `=` in the checkpoint names, 
+Note that if there are special characters such as `[` or `=` in the checkpoint names,
 you will need to escape them and put quotes around the string. For example,
 `checkpoint="runs/Ant/nn/last_Antep\=501rew\[5981.31\].pth"`
 
@@ -153,7 +307,7 @@ This script uses the same RL Games PPO policy as the above, but runs the RL loop
 ### Configuration and command line arguments
 
 We use [Hydra](https://hydra.cc/docs/intro/) to manage the config.
- 
+
 Common arguments for the training scripts are:
 
 * `task=TASK` - Selects which task to use. Any of `AllegroHand`, `Ant`, `Anymal`, `AnymalTerrain`, `BallBalance`, `Cartpole`, `Crazyflie`, `FrankaCabinet`, `Humanoid`, `Ingenuity`, `Quadcopter`, `ShadowHand`, `ShadowHandOpenAI_FF`, `ShadowHandOpenAI_LSTM` (these correspond to the config for each environment in the folder `omniisaacgymenvs/cfg/task`)
@@ -176,9 +330,9 @@ Hydra also allows setting variables inside config files directly as command line
 
 Default values for each of these are found in the `omniisaacgymenvs/cfg/config.yaml` file.
 
-The way that the `task` and `train` portions of the config works are through the use of config groups. 
+The way that the `task` and `train` portions of the config works are through the use of config groups.
 You can learn more about how these work [here](https://hydra.cc/docs/tutorials/structured_config/config_groups/)
-The actual configs for `task` are in `omniisaacgymenvs/cfg/task/<TASK>.yaml` and for `train` in `omniisaacgymenvs/cfg/train/<TASK>PPO.yaml`. 
+The actual configs for `task` are in `omniisaacgymenvs/cfg/task/<TASK>.yaml` and for `train` in `omniisaacgymenvs/cfg/train/<TASK>PPO.yaml`.
 
 In some places in the config you will find other variables referenced (for example,
  `num_actors: ${....task.env.numEnvs}`). Each `.` represents going one level up in the config hierarchy.
@@ -198,7 +352,7 @@ You can run (WandB)[https://wandb.ai/] with OmniIsaacGymEnvs by setting `wandb_a
 
 ## Tasks
 
-Source code for tasks can be found in `omniisaacgymenvs/tasks`. 
+Source code for tasks can be found in `omniisaacgymenvs/tasks`.
 
 Each task follows the frameworks provided in `omni.isaac.core` and `omni.isaac.gym` in Isaac Sim.
 
@@ -209,7 +363,7 @@ Full details on each of the tasks available can be found in the [RL examples doc
 
 ## Demo
 
-We provide an interactable demo based on the `AnymalTerrain` RL example. In this demo, you can click on any of 
+We provide an interactable demo based on the `AnymalTerrain` RL example. In this demo, you can click on any of
 the ANYmals in the scene to go into third-person mode and manually control the robot with your keyboard as follows:
 
 - `Up Arrow`: Forward linear velocity command
@@ -224,7 +378,7 @@ the ANYmals in the scene to go into third-person mode and manually control the r
 Launch this demo with the following command. Note that this demo limits the maximum number of ANYmals in the scene to 128.
 
 ```
-PYTHON_PATH scripts/rlgames_play.py task=AnymalTerrain num_envs=64 checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/2022.1/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/anymal_terrain.pth 
+PYTHON_PATH scripts/rlgames_play.py task=AnymalTerrain num_envs=64 checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/2022.1/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/anymal_terrain.pth
 ```
 
 <img src="https://user-images.githubusercontent.com/34286328/184688654-6e7899b2-5847-4184-8944-2a96b129b1ff.gif" width="600" height="300"/>
