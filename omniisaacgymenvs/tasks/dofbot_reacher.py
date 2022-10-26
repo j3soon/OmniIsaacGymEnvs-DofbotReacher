@@ -144,8 +144,8 @@ class DofbotReacherTask(ReacherTask):
     def get_reset_target_new_pos(self, n_reset_envs):
         # Randomly generate goal positions, although the resulting goal may still not be reachable.
         new_pos = torch_rand_float(-1, 1, (n_reset_envs, 3), device=self.device)
-        new_pos[:, 0] = new_pos[:, 0] * 0.1 + 0.1 * torch.sign(new_pos[:, 0])
-        new_pos[:, 1] = new_pos[:, 1] * 0.1 + 0.1 * torch.sign(new_pos[:, 1])
+        new_pos[:, 0] = new_pos[:, 0] * 0.05 + 0.15 * torch.sign(new_pos[:, 0])
+        new_pos[:, 1] = new_pos[:, 1] * 0.05 + 0.15 * torch.sign(new_pos[:, 1])
         new_pos[:, 2] = torch.abs(new_pos[:, 2] * 0.2) + 0.15
         return new_pos
 
