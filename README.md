@@ -2,7 +2,9 @@
 
 This repository adds a DofbotReacher environment based on [OmniIsaacGymEnvs](https://github.com/NVIDIA-Omniverse/OmniIsaacGymEnvs) (commit [d0eaf2e](https://github.com/NVIDIA-Omniverse/OmniIsaacGymEnvs/tree/d0eaf2e7f1e1e901d62e780392ca77843c08eb2c)), and includes Sim2Real code to control a real-world [Dofbot](https://category.yahboom.net/collections/r-robotics-arm/products/dofbot-jetson_nano) with the policy learned by reinforcement learning in Omniverse Isaac Gym/Sim.
 
-The code is tested on Isaac Sim 2022.1.1.
+We target Isaac Sim 2022.1.1 and test the RL code on Windows 10 and Ubuntu 18.04. The Sim2Real code is tested on Linux and a real Dofbot.
+
+This repo is compatible with [OmniIsaacGymEnvs-UR10Reacher](https://github.com/j3soon/OmniIsaacGymEnvs-UR10Reacher).
 
 ## Preview
 
@@ -13,7 +15,7 @@ The code is tested on Isaac Sim 2022.1.1.
 ## Installation
 
 Prerequisites:
-- [Install Omniverse Isaac Sim 2022.1.1](https://docs.omniverse.nvidia.com/app_isaacsim/app_isaacsim/install_basic.html)
+- [Install Omniverse Isaac Sim 2022.1.1](https://docs.omniverse.nvidia.com/app_isaacsim/app_isaacsim/install_basic.html) (Must setup Cache and Nucleus)
 - Your computer & GPU should be able to run the Cartpole example in [OmniIsaacGymEnvs](https://github.com/NVIDIA-Omniverse/OmniIsaacGymEnvs)
 - (Optional) [Set up a Dofbot with Jetson Nano](http://www.yahboom.net/study/Dofbot-Jetson_nano) in the real world
 
@@ -30,29 +32,43 @@ We will use Anaconda to manage our virtual environment:
 3. [Download and Install Anaconda](https://www.anaconda.com/products/distribution#Downloads).
    ```sh
    # For 64-bit (x86_64/x64/amd64/intel64)
-   wget https://repo.anaconda.com/archive/Anaconda3-2022.05-Linux-x86_64.sh
-   bash Anaconda3-2022.05-Linux-x86_64.sh
+   wget https://repo.anaconda.com/archive/Anaconda3-2022.10-Linux-x86_64.sh
+   bash Anaconda3-2022.10-Linux-x86_64.sh
    ```
 4. Patch Isaac Sim 2022.1.1
    ```sh
    export ISAAC_SIM="$HOME/.local/share/ov/pkg/isaac_sim-2022.1.1"
    cp ~/OmniIsaacGymEnvs-DofbotReacher/isaac_sim-2022.1.1-patch/setup_python_env.sh $ISAAC_SIM/setup_python_env.sh
    ```
+   > The patch for Isaac on Windows is slightly more complicated. Please [open an issue](https://github.com/j3soon/OmniIsaacGymEnvs-DofbotReacher/issues) for the patch details if you are using Windows.
 5. [Set up conda environment for Isaac Sim](https://docs.omniverse.nvidia.com/app_isaacsim/app_isaacsim/install_python.html#advanced-running-with-anaconda)
    ```sh
    # conda remove --name isaac-sim --all
    export ISAAC_SIM="$HOME/.local/share/ov/pkg/isaac_sim-2022.1.1"
    cd $ISAAC_SIM
    conda env create -f environment.yml
+   conda activate isaac-sim
+   cd ~/OmniIsaacGymEnvs-DofbotReacher
+   pip install -e .
    ```
 6. Activate conda environment
    ```sh
    export ISAAC_SIM="$HOME/.local/share/ov/pkg/isaac_sim-2022.1.1"
+   cd $ISAAC_SIM
    conda activate isaac-sim
    source setup_conda_env.sh
    ```
 
 Please note that you should execute the commands in Step 6 for every new shell.
+
+## Dummy Policy
+
+This is a sample to make sure you have setup the environment correctly. You should see a single Dofbot in Isaac Sim.
+
+```sh
+cd ~/OmniIsaacGymEnvs-DofbotReacher
+python omniisaacgymenvs/scripts/dummy_dofbot_policy.py task=DofbotReacher test=True num_envs=1
+```
 
 ## Demo
 
@@ -103,7 +119,7 @@ unzip runs.zip
 Make sure you have model checkpoints at `~/OmniIsaacGymEnvs-DofbotReacher/runs`, you can check it with the following command:
 
 ```sh
-tree ~/OmniIsaacGymEnvs-DofbotReacher/runs
+ls ~/OmniIsaacGymEnvs-DofbotReacher/runs/DofbotReacher/nn/
 ```
 
 Please note that you may not want to use the checkpoint `./runs/DofbotReacher/nn/DofbotReacher.pth` due to the randomness of the reward signal. Instead, use the latest checkpoint such as `./runs/DofbotReacher/nn/last_DofbotReacher_ep_1000_rew_XXX.pth`. You can replace `DofbotReacher.pth` with the latest checkpoint before following the steps below, or you can simply modify the commands to use the latest checkpoint.
@@ -119,7 +135,7 @@ Likewise, you can decrease the number of environments by modifying the parameter
 
 ## Sim2Real
 
-The learned policy has a very conservative constraint on the joint limits. Therefore, the gripper would not hit the ground under such limits. However, you should still make sure there are no other obstacles within Dofbot's reachable range. That being said, if things go wrong, press `Ctrl+C` twice in the terminal to kill the process.
+The learned policy has a very conservative constraint on the joint limits. Therefore, the gripper would not hit the ground under such limits. However, you should still make sure there are no other obstacles within Dofbot's workspace (reachable area). That being said, if things go wrong, press `Ctrl+C` twice in the terminal to kill the process.
 
 > It would be possible to remove the conservative joint limit constraints by utilizing self-collision detection in Isaac Sim. We are currently investigating this feature.
 
