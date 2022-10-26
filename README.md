@@ -110,7 +110,7 @@ You can also skip training by downloading the pre-trained model checkpoint by:
 
 ```sh
 cd ~/OmniIsaacGymEnvs-DofbotReacher
-wget https://github.com/j3soon/OmniIsaacGymEnvs-DofbotReacher/releases/download/v1.0.0/runs.zip
+wget https://github.com/j3soon/OmniIsaacGymEnvs-DofbotReacher/releases/download/v1.1.0/runs.zip
 unzip runs.zip
 ```
 
