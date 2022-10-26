@@ -29,7 +29,6 @@
 
 from abc import abstractmethod
 
-from omniisaacgymenvs.sim2real.dofbot import RealWorldDofbot
 from omniisaacgymenvs.tasks.base.rl_task import RLTask
 from omni.isaac.core.prims import RigidPrimView, XFormPrim
 from omni.isaac.core.scenes.scene import Scene
@@ -100,16 +99,6 @@ class ReacherTask(RLTask):
         self.av_factor = torch.tensor(self.av_factor, dtype=torch.float, device=self.device)
         self.total_successes = 0
         self.total_resets = 0
-
-        # Setup Sim2Real
-        sim2real_config = self._task_cfg['sim2real']
-        if sim2real_config['enabled']:
-            self.real_world_dofbot = RealWorldDofbot(
-                sim2real_config['ip'],
-                sim2real_config['port'],
-                sim2real_config['fail_quietely'],
-                sim2real_config['verbose']
-            )
         return
 
     def set_up_scene(self, scene: Scene) -> None:
@@ -152,13 +141,21 @@ class ReacherTask(RLTask):
     def get_observations(self):
         pass
 
+    @abstractmethod
+    def get_reset_target_new_pos(self, n_reset_envs):
+        pass
+
+    @abstractmethod
+    def send_joint_pos(self, joint_pos):
+        pass
+
     def get_object(self):
         self.object_start_translation = torch.tensor([0.0, 0.0, 0.0], device=self.device)
         self.object_start_orientation = torch.tensor([1.0, 0.0, 0.0, 0.0], device=self.device)
         self.object_usd_path = f"{self._assets_root_path}/Isaac/Props/Blocks/block_instanceable.usd"
         add_reference_to_stage(self.object_usd_path, self.default_zero_env_path + "/object")
         obj = XFormPrim(
-            prim_path=self.default_zero_env_path + "/object",
+            prim_path=self.default_zero_env_path + "/object/object",
             name="object",
             translation=self.object_start_translation,
             orientation=self.object_start_orientation,
@@ -174,7 +171,7 @@ class ReacherTask(RLTask):
         self.goal_usd_path = f"{self._assets_root_path}/Isaac/Props/Blocks/block_instanceable.usd"
         add_reference_to_stage(self.goal_usd_path, self.default_zero_env_path + "/goal")
         goal = XFormPrim(
-            prim_path=self.default_zero_env_path + "/goal",
+            prim_path=self.default_zero_env_path + "/goal/object",
             name="goal",
             translation=self.goal_start_translation,
             orientation=self.goal_start_orientation,
@@ -197,30 +194,14 @@ class ReacherTask(RLTask):
         self.arm_dof_default_pos = torch.zeros(self.num_arm_dofs, dtype=torch.float, device=self.device)
         self.arm_dof_default_vel = torch.zeros(self.num_arm_dofs, dtype=torch.float, device=self.device)
 
-        self.object_init_pos, self.object_init_rot = self._objects.get_world_poses()
-        self.object_init_pos -= self._env_pos
-        self.object_init_velocities = torch.zeros_like(self._objects.get_velocities(), dtype=torch.float, device=self.device)
-
-        self.goal_pos = self.object_init_pos.clone()
-        self.goal_rot = self.object_init_rot.clone()
-
-        self.goal_init_pos = self.goal_pos.clone()
-        self.goal_init_rot = self.goal_rot.clone()
-
         self.end_effectors_init_pos, self.end_effectors_init_rot = self._arms._end_effectors.get_world_poses()
+
+        self.goal_pos, self.goal_rot = self._goals.get_world_poses()
+        self.goal_pos -= self._env_pos
 
         # randomize all envs
         indices = torch.arange(self._num_envs, dtype=torch.int64, device=self._device)
         self.reset_idx(indices)
-
-    def get_object_goal_observations(self):
-        self.object_displacement_tensor = torch.tensor([0.0, 0.015, 0.1], device=self.device).repeat((self.num_envs, 1))
-        end_effectors_pos, end_effectors_rot = self._arms._end_effectors.get_world_poses()
-        # Reverse the default rotation and rotate the displacement tensor according to the current rotation
-        self.object_pos = end_effectors_pos + quat_rotate(end_effectors_rot, quat_rotate_inverse(self.end_effectors_init_rot, self.object_displacement_tensor))
-        self.object_rot = end_effectors_rot
-        self._objects.set_world_poses(self.object_pos, self.object_rot)
-        self.object_pos -= self._env_pos # subtract world env pos
 
     def calculate_metrics(self):
         self.fall_dist = 0
@@ -248,6 +229,15 @@ class ReacherTask(RLTask):
         env_ids = self.reset_buf.nonzero(as_tuple=False).squeeze(-1)
         goal_env_ids = self.reset_goal_buf.nonzero(as_tuple=False).squeeze(-1)
 
+        end_effectors_pos, end_effectors_rot = self._arms._end_effectors.get_world_poses()
+        # Reverse the default rotation and rotate the displacement tensor according to the current rotation
+        self.object_pos = end_effectors_pos + quat_rotate(end_effectors_rot, quat_rotate_inverse(self.end_effectors_init_rot, self.get_object_displacement_tensor()))
+        self.object_pos -= self._env_pos # subtract world env pos
+        self.object_rot = end_effectors_rot
+        object_pos = self.object_pos + self._env_pos
+        object_rot = self.object_rot
+        self._objects.set_world_poses(object_pos, object_rot)
+
         # if only goals need reset, then call set API
         if len(goal_env_ids) > 0 and len(env_ids) == 0:
             self.reset_target_pose(goal_env_ids)
@@ -267,9 +257,8 @@ class ReacherTask(RLTask):
         else:
             self.cur_targets[:, self.actuated_dof_indices] = scale(self.actions,
                 self.arm_dof_lower_limits[self.actuated_dof_indices], self.arm_dof_upper_limits[self.actuated_dof_indices])
-            # Dofbot doesn't seem to require such smoothing
-            # self.cur_targets[:, self.actuated_dof_indices] = self.act_moving_average * self.cur_targets[:, self.actuated_dof_indices] + \
-            #     (1.0 - self.act_moving_average) * self.prev_targets[:, self.actuated_dof_indices]
+            self.cur_targets[:, self.actuated_dof_indices] = self.act_moving_average * self.cur_targets[:, self.actuated_dof_indices] + \
+                (1.0 - self.act_moving_average) * self.prev_targets[:, self.actuated_dof_indices]
             self.cur_targets[:, self.actuated_dof_indices] = tensor_clamp(self.cur_targets[:, self.actuated_dof_indices],
                 self.arm_dof_lower_limits[self.actuated_dof_indices], self.arm_dof_upper_limits[self.actuated_dof_indices])
 
@@ -278,11 +267,16 @@ class ReacherTask(RLTask):
         self._arms.set_joint_position_targets(
             self.cur_targets[:, self.actuated_dof_indices], indices=None, joint_indices=self.actuated_dof_indices
         )
-        if self._task_cfg['sim2real']['enabled']:
+        if self._task_cfg['sim2real']['enabled'] and self.test and self.num_envs == 1:
             # Only retrieve the 0-th joint position even when multiple envs are used
             cur_joint_pos = self._arms.get_joint_positions(indices=[0], joint_indices=self.actuated_dof_indices)
             # Send the current joint positions to the real robot
-            self.real_world_dofbot.send_joint_pos(cur_joint_pos[0])
+            joint_pos = cur_joint_pos[0]
+            if torch.any(joint_pos < self.arm_dof_lower_limits) or torch.any(joint_pos > self.arm_dof_upper_limits):
+                print("get_joint_positions out of bound, send_joint_pos skipped")
+            else:
+                self.send_joint_pos(joint_pos)
+
 
     def is_done(self):
         pass
@@ -292,11 +286,7 @@ class ReacherTask(RLTask):
         indices = env_ids.to(dtype=torch.int32)
         rand_floats = torch_rand_float(-1.0, 1.0, (len(env_ids), 4), device=self.device)
 
-        # Randomly generate goal positions, although the resulting goal may still not be reachable.
-        new_pos = torch_rand_float(-1, 1, (len(env_ids), 3), device=self.device)
-        new_pos[:, 0] = new_pos[:, 0] * 0.1 + 0.1 * torch.sign(new_pos[:, 1])
-        new_pos[:, 1] = new_pos[:, 1] * 0.1 + 0.1 * torch.sign(new_pos[:, 1])
-        new_pos[:, 2] = (new_pos[:, 2] + 1) / 2 * 0.2 + 0.15
+        new_pos = self.get_reset_target_new_pos(len(env_ids))
         new_rot = randomize_rotation(rand_floats[:, 0], rand_floats[:, 1], self.x_unit_tensor[env_ids], self.y_unit_tensor[env_ids])
 
         self.goal_pos[env_ids] = new_pos
@@ -332,6 +322,7 @@ class ReacherTask(RLTask):
         self.arm_dof_targets[env_ids, :self.num_arm_dofs] = pos
 
         self._arms.set_joint_position_targets(self.arm_dof_targets[env_ids], indices)
+        # set_joint_positions doesn't seem to apply immediately.
         self._arms.set_joint_positions(dof_pos[env_ids], indices)
         self._arms.set_joint_velocities(dof_vel[env_ids], indices)
 

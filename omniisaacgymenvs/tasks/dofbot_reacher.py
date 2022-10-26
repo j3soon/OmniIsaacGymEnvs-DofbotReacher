@@ -27,11 +27,13 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
+from omniisaacgymenvs.sim2real.dofbot import RealWorldDofbot
 from omniisaacgymenvs.utils.config_utils.sim_config import SimConfig
 from omniisaacgymenvs.tasks.shared.reacher import ReacherTask
 from omniisaacgymenvs.robots.articulations.views.dofbot_view import DofbotView
 from omniisaacgymenvs.robots.articulations.dofbot import Dofbot
 
+from omni.isaac.core.utils.prims import get_prim_at_path
 from omni.isaac.core.utils.torch import *
 from omni.isaac.gym.vec_env import VecEnvBase
 
@@ -89,6 +91,16 @@ class DofbotReacherTask(ReacherTask):
         # ValueError: Expected parameter loc (Tensor of shape (2048, 6)) of distribution Normal(loc: torch.Size([2048, 6]), scale: torch.Size([2048, 6])) to satisfy the constraint Real(), but found invalid values
 
         ReacherTask.__init__(self, name=name, env=env)
+
+        # Setup Sim2Real
+        sim2real_config = self._task_cfg['sim2real']
+        if sim2real_config['enabled'] and self.test and self.num_envs == 1:
+            self.real_world_dofbot = RealWorldDofbot(
+                sim2real_config['ip'],
+                sim2real_config['port'],
+                sim2real_config['fail_quietely'],
+                sim2real_config['verbose']
+            )
         return
 
     def get_num_dof(self):
@@ -96,16 +108,22 @@ class DofbotReacherTask(ReacherTask):
         return 6
 
     def get_arm(self):
-        Dofbot(prim_path=self.default_zero_env_path + "/Dofbot", name="Dofbot")
+        dofbot = Dofbot(prim_path=self.default_zero_env_path + "/Dofbot", name="Dofbot")
+        self._sim_config.apply_articulation_settings(
+            "dofbot", 
+            get_prim_at_path(dofbot.prim_path), 
+            self._sim_config.parse_actor_config("dofbot"),
+        )
 
     def get_arm_view(self, scene):
         arm_view = DofbotView(prim_paths_expr="/World/envs/.*/Dofbot", name="dofbot_view")
         scene.add(arm_view._end_effectors)
         return arm_view
+    
+    def get_object_displacement_tensor(self):
+        return torch.tensor([0.0, 0.015, 0.1], device=self.device).repeat((self.num_envs, 1))
 
     def get_observations(self):
-        self.get_object_goal_observations()
-
         self.arm_dof_pos = self._arms.get_joint_positions()
         self.arm_dof_vel = self._arms.get_joint_velocities()
 
@@ -123,6 +141,14 @@ class DofbotReacherTask(ReacherTask):
         }
         return observations
 
+    def get_reset_target_new_pos(self, n_reset_envs):
+        # Randomly generate goal positions, although the resulting goal may still not be reachable.
+        new_pos = torch_rand_float(-1, 1, (n_reset_envs, 3), device=self.device)
+        new_pos[:, 0] = new_pos[:, 0] * 0.1 + 0.1 * torch.sign(new_pos[:, 1])
+        new_pos[:, 1] = new_pos[:, 1] * 0.1 + 0.1 * torch.sign(new_pos[:, 1])
+        new_pos[:, 2] = (new_pos[:, 2] + 1) / 2 * 0.2 + 0.15
+        return new_pos
+
     def compute_full_observations(self, no_vel=False):
         if no_vel:
             raise NotImplementedError()
@@ -136,3 +162,6 @@ class DofbotReacherTask(ReacherTask):
             self.obs_buf[:, base+3:base+7] = self.goal_rot
             self.obs_buf[:, base+7:base+11] = quat_mul(self.object_rot, quat_conjugate(self.goal_rot))
             self.obs_buf[:, base+11:base+17] = self.actions
+
+    def send_joint_pos(self, joint_pos):
+        self.real_world_dofbot.send_joint_pos(joint_pos)

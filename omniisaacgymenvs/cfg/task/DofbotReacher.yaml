@@ -82,6 +82,11 @@ sim:
     gpu_temp_buffer_capacity: 16777216
     gpu_max_num_partitions: 8
 
+  dofbot:
+    # -1 to use default values
+    override_usd_defaults: False
+    fixed_base: False
+    enable_self_collisions: False
   object:
     # -1 to use default values
     override_usd_defaults: False

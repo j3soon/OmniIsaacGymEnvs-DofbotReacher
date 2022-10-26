@@ -6,7 +6,7 @@ import numpy as np
 
 
 class RealWorldDofbot():
-    # Ref: Section `6.5 Control all servo` in  http://www.yahboom.net/study/Dofbot-Jetson_nano
+    # Defined in dofbot.usd
     sim_dof_angle_limits = [
         (-90, 90, False),
         (-90, 90, False),
@@ -16,7 +16,9 @@ class RealWorldDofbot():
         (-30, 60, True),
         # (-30, 60): /arm_01/link5/Finger_Left_01/Finger_Left_01_RevoluteJoint
         # (-60, 30): /arm_01/link5/Finger_Right_01/Finger_Right_01_RevoluteJoint
-    ] # _sim_dof_limits[2] == True indicates inversed joint angle compared to real
+    ] # _sim_dof_limits[:,2] == True indicates inversed joint angle compared to real
+
+    # Ref: Section `6.5 Control all servo` in  http://www.yahboom.net/study/Dofbot-Jetson_nano
     servo_angle_limits = [
         (0, 180),
         (0, 180),
