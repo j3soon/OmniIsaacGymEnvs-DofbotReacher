@@ -114,6 +114,10 @@ wget https://github.com/j3soon/OmniIsaacGymEnvs-DofbotReacher/releases/download/
 unzip runs.zip
 ```
 
+The learning curve of the pre-trained model:
+
+![](docs/media/DofbotReacher-Learning-Curve.png)
+
 ## Testing
 
 Make sure you have model checkpoints at `~/OmniIsaacGymEnvs-DofbotReacher/runs`, you can check it with the following command:
