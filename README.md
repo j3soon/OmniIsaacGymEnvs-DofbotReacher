@@ -30,12 +30,12 @@ We will use Anaconda to manage our virtual environment:
    - Linux
      ```sh
      cd ~
-     git clone https://github.com/j3soon/OmniIsaacGymEnvs-DofbotReacher.git
+     git clone -b isaac-sim-2022.1.1 https://github.com/j3soon/OmniIsaacGymEnvs-DofbotReacher.git
      ```
    - Windows
      ```sh
      cd %USERPROFILE%
-     git clone https://github.com/j3soon/OmniIsaacGymEnvs-DofbotReacher.git
+     git clone -b isaac-sim-2022.1.1 https://github.com/j3soon/OmniIsaacGymEnvs-DofbotReacher.git
      ```
 2. Generate [instanceable](https://docs.omniverse.nvidia.com/isaacsim/latest/isaac_gym_tutorials/tutorial_gym_instanceable_assets.html) Dofbot assets for training:
 
@@ -245,7 +245,7 @@ We will now set up the environment inside Docker:
 3. Clone this repository:
    ```sh
    cd ~
-   git clone https://github.com/j3soon/OmniIsaacGymEnvs-DofbotReacher.git
+   git clone -b isaac-sim-2022.1.1 https://github.com/j3soon/OmniIsaacGymEnvs-DofbotReacher.git
    ```
 4. [Download and Install Anaconda](https://www.anaconda.com/products/distribution#Downloads).
    ```sh
