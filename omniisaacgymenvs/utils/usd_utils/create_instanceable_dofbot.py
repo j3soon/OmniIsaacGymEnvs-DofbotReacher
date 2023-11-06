@@ -79,6 +79,7 @@ def create_dofbot_mesh(asset_usd_path, dofbot_mesh_usd_path):
         ['/arm/link3/collisions', 'collisions_xform'],
         # link4
         ['/arm/link4/Wrist_Lift', 'geoms_xform'],
+        ['/arm/link4/Camera', 'geoms_xform'],
         # link5
         ['/arm/link5/Wrist_Twist/Wrist_Twist', 'geoms_xform'],
         ['/arm/link5/Finger_Left_01/Finger_Left_01', 'geoms_xform'],
