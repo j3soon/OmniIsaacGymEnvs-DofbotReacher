@@ -27,13 +27,14 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+# Ref: /omniisaacgymenvs/robots/articulations/views/shadow_hand_view.py
+
 
 from typing import Optional
 
+import torch
 from omni.isaac.core.articulations import ArticulationView
 from omni.isaac.core.prims import RigidPrimView
-
-import torch
 
 class DofbotView(ArticulationView):
     def __init__(
@@ -42,11 +43,7 @@ class DofbotView(ArticulationView):
         name: Optional[str] = "DofbotView",
     ) -> None:
 
-        super().__init__(
-            prim_paths_expr=prim_paths_expr,
-            name=name,
-            reset_xform_properties=False
-        )
+        super().__init__(prim_paths_expr=prim_paths_expr, name=name, reset_xform_properties=False)
 
         # Use RigidPrimView instead of XFormPrimView, since the XForm is not updated when running
         self._end_effectors = RigidPrimView(prim_paths_expr="/World/envs/.*/Dofbot/link5/Wrist_Twist", name="end_effector_view", reset_xform_properties=False)

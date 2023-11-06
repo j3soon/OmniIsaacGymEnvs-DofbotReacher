@@ -2,7 +2,8 @@
 
 This repository adds a DofbotReacher environment based on [OmniIsaacGymEnvs](https://github.com/NVIDIA-Omniverse/OmniIsaacGymEnvs) (commit [d0eaf2e](https://github.com/NVIDIA-Omniverse/OmniIsaacGymEnvs/tree/d0eaf2e7f1e1e901d62e780392ca77843c08eb2c)), and includes Sim2Real code to control a real-world [Dofbot](https://category.yahboom.net/collections/r-robotics-arm/products/dofbot-jetson_nano) with the policy learned by reinforcement learning in Omniverse Isaac Gym/Sim.
 
-We target Isaac Sim 2022.1.1 and tested the RL code on Windows 10 and Ubuntu 18.04. The Sim2Real code is tested on Linux and a real Dofbot.
+- We suggest using [the isaac-sim-2022.1.1 branch](https://github.com/j3soon/OmniIsaacGymEnvs-DofbotReacher/tree/isaac-sim-2022.1.1) to prevent any potential issues. The RL code is tested on both Windows and Linux, while the Sim2Real code is tested on Linux and a real Dofbot using Isaac Sim 2022.1.1 and ROS Melodic.
+- **WARNING**: The RL code in this branch is only tested on Linux using Isaac Sim 2023.1.0. The Sim2Real code isn't fully tested yet.
 
 This repo is compatible with [OmniIsaacGymEnvs-UR10Reacher](https://github.com/j3soon/OmniIsaacGymEnvs-UR10Reacher).
 
@@ -16,7 +17,7 @@ This repo is compatible with [OmniIsaacGymEnvs-UR10Reacher](https://github.com/j
 
 Prerequisites:
 - Before starting, please make sure your hardware and software meet the [system requirements](https://docs.omniverse.nvidia.com/isaacsim/latest/installation/requirements.html#system-requirements).
-- [Install Omniverse Isaac Sim 2022.1.1](https://docs.omniverse.nvidia.com/isaacsim/latest/installation/install_workstation.html) (Must setup Cache and Nucleus)
+- [Install Omniverse Isaac Sim 2023.1.0](https://docs.omniverse.nvidia.com/isaacsim/latest/installation/install_workstation.html) (Must setup Cache and Nucleus)
   - You may try out newer versions of Isaac Sim along with [their corresponding patch](https://github.com/j3soon/isaac-extended#conda-issue-on-linux), but it is not guaranteed to work.
 - Double check that Nucleus is correctly installed by [following these steps](https://github.com/j3soon/isaac-extended#nucleus).
 - Your computer & GPU should be able to run the Cartpole example in [OmniIsaacGymEnvs](https://github.com/NVIDIA-Omniverse/OmniIsaacGymEnvs)
@@ -26,16 +27,18 @@ Make sure to install Isaac Sim in the default directory and clone this repositor
 
 We will use Anaconda to manage our virtual environment:
 
-1. Clone this repository:
+1. Clone this repository and the patches repo:
    - Linux
      ```sh
      cd ~
      git clone https://github.com/j3soon/OmniIsaacGymEnvs-DofbotReacher.git
+     git clone https://github.com/j3soon/isaac-extended.git
      ```
    - Windows
      ```sh
      cd %USERPROFILE%
      git clone https://github.com/j3soon/OmniIsaacGymEnvs-DofbotReacher.git
+     git clone https://github.com/j3soon/isaac-extended.git
      ```
 2. Generate [instanceable](https://docs.omniverse.nvidia.com/isaacsim/latest/isaac_gym_tutorials/tutorial_gym_instanceable_assets.html) Dofbot assets for training:
 
@@ -47,23 +50,20 @@ We will use Anaconda to manage our virtual environment:
    bash Anaconda3-2022.10-Linux-x86_64.sh
    ```
    For Windows users, make sure to use `Anaconda Prompt` instead of `Anaconda Powershell Prompt`, `Command Prompt`, or `Powershell` for the following commands.
-4. Patch Isaac Sim 2022.1.1
+4. Patch Isaac Sim 2023.1.0
    - Linux
      ```sh
-     export ISAAC_SIM="$HOME/.local/share/ov/pkg/isaac_sim-2022.1.1"
+     export ISAAC_SIM="$HOME/.local/share/ov/pkg/isaac_sim-2023.1.0"
      cp $ISAAC_SIM/setup_python_env.sh $ISAAC_SIM/setup_python_env.sh.bak
-     cp ~/OmniIsaacGymEnvs-DofbotReacher/isaac_sim-2022.1.1-patch/linux/setup_python_env.sh $ISAAC_SIM/setup_python_env.sh
+     cp ~/isaac-extended/isaac_sim-2023.1.0-patch/linux/setup_python_env.sh $ISAAC_SIM/setup_python_env.sh
      ```
    - Windows
-     ```sh
-     set ISAAC_SIM="%LOCALAPPDATA%\ov\pkg\isaac_sim-2022.1.1"
-     copy %USERPROFILE%\OmniIsaacGymEnvs-DofbotReacher\isaac_sim-2022.1.1-patch\windows\setup_conda_env.bat %ISAAC_SIM%\setup_conda_env.bat
-     ```
+     > (To be updated)
 5. [Set up conda environment for Isaac Sim](https://docs.omniverse.nvidia.com/isaacsim/latest/installation/install_python.html#advanced-running-with-anaconda)
    - Linux
      ```sh
      # conda remove --name isaac-sim --all
-     export ISAAC_SIM="$HOME/.local/share/ov/pkg/isaac_sim-2022.1.1"
+     export ISAAC_SIM="$HOME/.local/share/ov/pkg/isaac_sim-2023.1.0"
      cd $ISAAC_SIM
      conda env create -f environment.yml
      conda activate isaac-sim
@@ -71,30 +71,18 @@ We will use Anaconda to manage our virtual environment:
      pip install -e .
      ```
    - Windows
-     ```sh
-     # conda remove --name isaac-sim --all
-     set ISAAC_SIM="%LOCALAPPDATA%\ov\pkg\isaac_sim-2022.1.1"
-     cd %ISAAC_SIM%
-     conda env create -f environment.yml
-     conda activate isaac-sim
-     :: Fix incorrect importlib-metadata version (isaac-sim 2022.1.1)
-     pip install importlib-metadata==4.11.4
-     cd %USERPROFILE%\OmniIsaacGymEnvs-DofbotReacher
-     pip install -e .
-     :: Fix incorrect torch version (isaac-sim 2022.1.1)
-     conda install -y pytorch==1.11.0 torchvision==0.12.0 torchaudio==0.11.0 -c pytorch
-     ```
+     > (To be updated)
 6. Activate conda environment
    - Linux
      ```sh
-     export ISAAC_SIM="$HOME/.local/share/ov/pkg/isaac_sim-2022.1.1"
+     export ISAAC_SIM="$HOME/.local/share/ov/pkg/isaac_sim-2023.1.0"
      cd $ISAAC_SIM
      conda activate isaac-sim
      source setup_conda_env.sh
      ```
    - Windows
      ```sh
-     set ISAAC_SIM="%LOCALAPPDATA%\ov\pkg\isaac_sim-2022.1.1"
+     set ISAAC_SIM="%LOCALAPPDATA%\ov\pkg\isaac_sim-2023.1.0"
      cd %ISAAC_SIM%
      conda activate isaac-sim
      call setup_conda_env.bat
@@ -112,6 +100,8 @@ This is a sample to make sure you have setup the environment correctly. You shou
 cd ~/OmniIsaacGymEnvs-DofbotReacher
 python omniisaacgymenvs/scripts/dummy_dofbot_policy.py task=DofbotReacher test=True num_envs=1
 ```
+
+Alternatively, you can replace the dummy policy with a random policy with `omniisaacgymenvs/scripts/random_policy.py`.
 
 ## Training
 
@@ -143,13 +133,13 @@ The learning curve of the pre-trained model:
 
 ## Testing
 
-Make sure you have model checkpoints at `~/OmniIsaacGymEnvs-DofbotReacher/runs`, you can check it with the following command:
+Make sure you have stored the model checkpoints at `~/OmniIsaacGymEnvs-DofbotReacher/runs`, you can check it with the following command:
 
 ```sh
 ls ~/OmniIsaacGymEnvs-DofbotReacher/runs/DofbotReacher/nn/
 ```
 
-Please note that you may not want to use the checkpoint `./runs/DofbotReacher/nn/DofbotReacher.pth` due to the randomness of the reward signal. Instead, use the latest checkpoint such as `./runs/DofbotReacher/nn/last_DofbotReacher_ep_1000_rew_XXX.pth`. You can replace `DofbotReacher.pth` with the latest checkpoint before following the steps below, or you can simply modify the commands to use the latest checkpoint.
+In order to achieve the highest rewards, you may not want to use the latest checkpoint `./runs/DofbotReacher/nn/DofbotReacher.pth`. Instead, use the checkpoint with highest rewards such as `./runs/DofbotReacher/nn/last_DofbotReacher_ep_1000_rew_XXX.pth`. You can replace `DofbotReacher.pth` with the latest checkpoint before following the steps below, or simply modify the commands below to use the latest checkpoint.
 
 You can visualize the learned policy by the following command:
 
@@ -210,7 +200,7 @@ Launch this demo with the following command. Note that this demo limits the maxi
 
 ```sh
 cd ~/OmniIsaacGymEnvs-DofbotReacher
-python omniisaacgymenvs/scripts/rlgames_play.py task=DofbotReacher num_envs=64
+python omniisaacgymenvs/scripts/rlgames_demo.py task=DofbotReacher num_envs=64
 ```
 
 ## Running in Docker
@@ -219,94 +209,50 @@ If you have a [NVIDIA Enterprise subscription](https://docs.omniverse.nvidia.com
 
 For users without a subscription, you can pull the [Isaac Docker image](https://catalog.ngc.nvidia.com/orgs/nvidia/containers/isaac-sim), but should still install Omniverse Nucleus beforehand. (only Isaac itself is dockerized)
 
-Follow [this tutorial](https://docs.omniverse.nvidia.com/isaacsim/latest/installation/install_container.html#isaac-sim-setup-remote-headless-container) to generate your NGC API Key, and make sure you can access Isaac with Omniverse Streaming Client, WebRTC, or WebSocket. After that, exit the Docker container.
+Follow [this tutorial](https://docs.omniverse.nvidia.com/isaacsim/latest/installation/install_container.html#isaac-sim-setup-remote-headless-container) to generate your NGC API Key.
 
-Please note that you should generate instanceable assets beforehand as mentioned in the [Installation](#installation) section.
+Please note that you should clone this repositories in your home directory and generate instanceable assets beforehand as mentioned in the [Installation](#installation) section.
 
-We will now set up the environment inside Docker:
+We will now set up the docker environment.
 
-1. Launch an Isaac Container:
+1. Build the docker image
    ```sh
-   docker run --name isaac-sim --entrypoint bash -it --gpus all -e "ACCEPT_EULA=Y" --rm --network=host \
-   -v ~/docker/isaac-sim/cache/ov:/root/.cache/ov:rw \
-   -v ~/docker/isaac-sim/cache/pip:/root/.cache/pip:rw \
-   -v ~/docker/isaac-sim/cache/glcache:/root/.cache/nvidia/GLCache:rw \
-   -v ~/docker/isaac-sim/cache/computecache:/root/.nv/ComputeCache:rw \
-   -v ~/docker/isaac-sim/logs:/root/.nvidia-omniverse/logs:rw \
-   -v ~/docker/isaac-sim/config:/root/.nvidia-omniverse/config:rw \
-   -v ~/docker/isaac-sim/data:/root/.local/share/ov/data:rw \
-   -v ~/docker/isaac-sim/documents:/root/Documents:rw \
-   nvcr.io/nvidia/isaac-sim:2022.1.1
+   docker pull nvcr.io/nvidia/isaac-sim:2023.1.0-hotfix.1
+   docker build . -t j3soon/isaac-sim
    ```
-2. Install common tools:
+2. Launch an Isaac Container in Headless mode:
    ```sh
-   apt update && apt install -y git wget vim
+   scripts/run_docker_headless.sh
+   ./runheadless.native.sh
    ```
-3. Clone this repository:
+   Alternatively, launch an Isaac Container with GUI (The host machine should include a desktop environment):
    ```sh
-   cd ~
-   git clone https://github.com/j3soon/OmniIsaacGymEnvs-DofbotReacher.git
+   scripts/run_docker.sh
+   ./runapp.sh
    ```
-4. [Download and Install Anaconda](https://www.anaconda.com/products/distribution#Downloads).
+3. Install this repository
    ```sh
-   # For 64-bit (x86_64/x64/amd64/intel64)
-   wget https://repo.anaconda.com/archive/Anaconda3-2022.10-Linux-x86_64.sh
-   bash Anaconda3-2022.10-Linux-x86_64.sh -b -p $HOME/anaconda3
-   ```
-5. Patch Isaac Sim 2022.1.1
-   ```sh
-   export ISAAC_SIM="/isaac-sim"
-   cp $ISAAC_SIM/setup_python_env.sh $ISAAC_SIM/setup_python_env.sh.bak
-   cp ~/OmniIsaacGymEnvs-DofbotReacher/isaac_sim-2022.1.1-patch/setup_python_env.sh $ISAAC_SIM/setup_python_env.sh
-   ```
-6. [Set up conda environment for Isaac Sim](https://docs.omniverse.nvidia.com/isaacsim/latest/installation/install_python.html#advanced-running-with-anaconda)
-   ```sh
-   source ~/anaconda3/etc/profile.d/conda.sh
-   # conda remove --name isaac-sim --all
-   export ISAAC_SIM="/isaac-sim"
-   cd $ISAAC_SIM
-   conda env create -f environment.yml
-   conda activate isaac-sim
    cd ~/OmniIsaacGymEnvs-DofbotReacher
    pip install -e .
    ```
-7. Activate conda environment
+4. Run any command in the docker container
+
+   > Make sure to add `headless=True` if the container is launched in headless mode.
+
+   For an example, running the training script:
+
    ```sh
-   source ~/anaconda3/etc/profile.d/conda.sh
-   export ISAAC_SIM="/isaac-sim"
-   cd $ISAAC_SIM
-   conda activate isaac-sim
-   source setup_conda_env.sh
-   ./vulkan_check.sh
+   cd ~/OmniIsaacGymEnvs-DofbotReacher
+   python omniisaacgymenvs/scripts/rlgames_train.py task=DofbotReacher headless=True num_envs=2048
    ```
 
-We can now train a RL policy in this container:
+   You can watch the training progress with:
 
-```sh
-cd ~/OmniIsaacGymEnvs-DofbotReacher
-python omniisaacgymenvs/scripts/rlgames_train.py task=DofbotReacher headless=True num_envs=2048
-```
-
-Make sure to copy the learned weights to a mounted volume before exiting the container, otherwise it will be deleted:
-
-```sh
-# In container
-cp -r ~/OmniIsaacGymEnvs-DofbotReacher/runs ~/Documents/runs
-# In host
-ls ~/docker/isaac-sim/documents/
-```
-
-You can watch the training progress with:
-
-```sh
-docker ps # Observe Container ID
-docker exec -it <CONTAINER_ID> /bin/bash
-conda activate isaac-sim
-cd ~/OmniIsaacGymEnvs-DofbotReacher
-tensorboard --logdir=./runs
-```
-
-Currently we do not support running commands that requires visualization (Testing, Sim2Real, etc.) in Docker. Since I haven't figured out how to make Vulkan render a Isaac window inside a container yet. Alternatively, it may be possible to add `headless=True` and view them in Omniverse Streaming Client, WebRTC, or WebSocket, but I haven't tested this by myself.
+   ```sh
+   docker exec -it isaac-sim /bin/bash
+   cd ~/OmniIsaacGymEnvs-DofbotReacher
+   tensorboard --logdir=./runs
+   ```
 
 ## Acknowledgement
 

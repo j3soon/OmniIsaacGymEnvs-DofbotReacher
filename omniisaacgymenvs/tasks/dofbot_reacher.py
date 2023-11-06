@@ -27,20 +27,22 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+# Ref: /omniisaacgymenvs/tasks/shadow_hand.py
 
+
+import math
+
+import numpy as np
+import torch
 from omniisaacgymenvs.sim2real.dofbot import RealWorldDofbot
 from omniisaacgymenvs.utils.config_utils.sim_config import SimConfig
-from omniisaacgymenvs.tasks.shared.reacher import ReacherTask
 from omniisaacgymenvs.robots.articulations.views.dofbot_view import DofbotView
 from omniisaacgymenvs.robots.articulations.dofbot import Dofbot
+from omniisaacgymenvs.tasks.shared.reacher import ReacherTask
 
 from omni.isaac.core.utils.prims import get_prim_at_path
 from omni.isaac.core.utils.torch import *
 from omni.isaac.gym.vec_env import VecEnvBase
-
-import numpy as np
-import torch
-import math
 
 
 class DofbotReacherTask(ReacherTask):
@@ -51,6 +53,11 @@ class DofbotReacherTask(ReacherTask):
         env: VecEnvBase,
         offset=None
     ) -> None:
+        self.update_config(sim_config)
+        ReacherTask.__init__(self, name=name, env=env)
+        return
+
+    def update_config(self, sim_config):
         self._sim_config = sim_config
         self._cfg = sim_config.config
         self._task_cfg = sim_config.task_config
@@ -91,8 +98,6 @@ class DofbotReacherTask(ReacherTask):
         # It will introduce the following error:
         # ValueError: Expected parameter loc (Tensor of shape (2048, 6)) of distribution Normal(loc: torch.Size([2048, 6]), scale: torch.Size([2048, 6])) to satisfy the constraint Real(), but found invalid values
 
-        ReacherTask.__init__(self, name=name, env=env)
-
         # Setup Sim2Real
         sim2real_config = self._task_cfg['sim2real']
         if sim2real_config['enabled'] and self.test and self.num_envs == 1:
@@ -102,17 +107,20 @@ class DofbotReacherTask(ReacherTask):
                 sim2real_config['fail_quietely'],
                 sim2real_config['verbose']
             )
-        return
+        ReacherTask.update_config(self)
 
     def get_num_dof(self):
         assert self._arms.num_dof == 11
         return 6
 
     def get_arm(self):
-        dofbot = Dofbot(prim_path=self.default_zero_env_path + "/Dofbot", name="Dofbot")
+        dofbot = Dofbot(
+            prim_path=self.default_zero_env_path + "/Dofbot",
+            name="Dofbot",
+        )
         self._sim_config.apply_articulation_settings(
-            "dofbot", 
-            get_prim_at_path(dofbot.prim_path), 
+            "dofbot",
+            get_prim_at_path(dofbot.prim_path),
             self._sim_config.parse_actor_config("dofbot"),
         )
 
@@ -120,7 +128,7 @@ class DofbotReacherTask(ReacherTask):
         arm_view = DofbotView(prim_paths_expr="/World/envs/.*/Dofbot", name="dofbot_view")
         scene.add(arm_view._end_effectors)
         return arm_view
-    
+
     def get_object_displacement_tensor(self):
         return torch.tensor([0.0, 0.015, 0.1], device=self.device).repeat((self.num_envs, 1))
 
@@ -135,11 +143,7 @@ class DofbotReacherTask(ReacherTask):
         else:
             print("Unkown observations type!")
 
-        observations = {
-            self._arms.name: {
-                "obs_buf": self.obs_buf
-            }
-        }
+        observations = {self._arms.name: {"obs_buf": self.obs_buf}}
         return observations
 
     def get_reset_target_new_pos(self, n_reset_envs):

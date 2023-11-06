@@ -27,19 +27,21 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+# Ref: /omniisaacgymenvs/scripts/random_policy.py
 
+
+import hydra
 import numpy as np
 import torch
-import hydra
 from omegaconf import DictConfig
-
+from omniisaacgymenvs.envs.vec_env_rlgames import VecEnvRLGames
+from omniisaacgymenvs.utils.config_utils.path_utils import get_experience
 from omniisaacgymenvs.utils.hydra_cfg.hydra_utils import *
 from omniisaacgymenvs.utils.hydra_cfg.reformat import omegaconf_to_dict, print_dict
-
 from omniisaacgymenvs.utils.task_util import initialize_task
-from omniisaacgymenvs.envs.vec_env_rlgames import VecEnvRLGames
 
-@hydra.main(config_name="config", config_path="../cfg")
+
+@hydra.main(version_base=None, config_name="config", config_path="../cfg")
 def parse_hydra_configs(cfg: DictConfig):
 
     cfg_dict = omegaconf_to_dict(cfg)
@@ -47,15 +49,32 @@ def parse_hydra_configs(cfg: DictConfig):
 
     headless = cfg.headless
     render = not headless
+    enable_viewport = "enable_cameras" in cfg.task.sim and cfg.task.sim.enable_cameras
 
-    env = VecEnvRLGames(headless=headless)
+    # select kit app file
+    experience = get_experience(headless, cfg.enable_livestream, enable_viewport, cfg.kit_app)
+
+    env = VecEnvRLGames(
+        headless=headless,
+        sim_device=cfg.device_id,
+        enable_livestream=cfg.enable_livestream,
+        enable_viewport=enable_viewport,
+        experience=experience
+    )
+    # sets seed. if seed is -1 will pick a random one
+    from omni.isaac.core.utils.torch.maths import set_seed
+
+    cfg.seed = set_seed(cfg.seed, torch_deterministic=cfg.torch_deterministic)
+    cfg_dict["seed"] = cfg.seed
     task = initialize_task(cfg_dict, env)
 
     while env._simulation_app.is_running():
         if env._world.is_playing():
             if env._world.current_time_step_index == 0:
                 env._world.reset(soft=True)
-            actions = torch.tensor(np.array([env.action_space.sample() for _ in range(env.num_envs)]), device=task.rl_device)
+            actions = torch.tensor(
+                np.array([env.action_space.sample() for _ in range(env.num_envs)]), device=task.rl_device
+            )
             actions[:, 0] = 1.0
             actions[:, 1] = 1.0
             actions[:, 2] = 1.0
@@ -71,5 +90,6 @@ def parse_hydra_configs(cfg: DictConfig):
 
     env._simulation_app.close()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     parse_hydra_configs()
