@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<robot name="arm">
+    <link name="base_link">
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <mesh filename="package://dofbot_info/meshes/base_link.STL" />
+            </geometry>
+            <material name="">
+                <color rgba="0.592156862745098 0.666666666666667 0.682352941176471 1" />
+            </material>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <mesh filename="package://dofbot_info/meshes/base_link.STL" />
+            </geometry>
+        </collision>
+    </link>
+    <link name="link1">
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <mesh filename="package://dofbot_info/meshes/link1.STL" />
+            </geometry>
+            <material name="">
+                <color rgba="0 0.627450980392157 0.235294117647059 1" />
+            </material>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <mesh filename="package://dofbot_info/meshes/link1.STL" />
+            </geometry>
+        </collision>
+    </link>
+    <joint name="joint1" type="revolute">
+        <origin xyz="0 0 0.06605" rpy="-0.010805 0 0" />
+        <parent link="base_link" />
+        <child link="link1" />
+        <axis xyz="0 0 1" />
+        <limit effort="30" velocity="1.0" lower="-1.5708" upper="1.5708"/>
+    </joint>
+    <link name="link2">
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <mesh filename="package://dofbot_info/meshes/link2.STL" />
+            </geometry>
+            <material name="">
+                <color rgba="0.592156862745098 0.666666666666667 0.682352941176471 1" />
+            </material>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <mesh filename="package://dofbot_info/meshes/link2.STL" />
+            </geometry>
+        </collision>
+    </link>
+    <joint name="joint2" type="revolute">
+        <origin xyz="0 -0.00031873 0.04145" rpy="0 1.5708 0" />
+        <parent link="link1" />
+        <child link="link2" />
+        <axis xyz="0 0 1" />
+        <limit effort="30" velocity="1.0" lower="-1.5708" upper="1.5708"/>
+    </joint>
+    <link name="link3">
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <mesh filename="package://dofbot_info/meshes/link3.STL" />
+            </geometry>
+            <material name="">
+                <color rgba="0 0.627450980392157 0.235294117647059 1" />
+            </material>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <mesh filename="package://dofbot_info/meshes/link3.STL" />
+            </geometry>
+        </collision>
+    </link>
+    <joint name="joint3" type="revolute">
+        <origin xyz="-0.08285 0 0" rpy="0 0 0" />
+        <parent link="link2" />
+        <child link="link3" />
+        <axis xyz="0 0 1" />
+        <limit effort="30" velocity="1.0" lower="-1.5708" upper="1.5708"/>
+    </joint>
+    <link name="link4">
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <mesh filename="package://dofbot_info/meshes/link4.STL" />
+            </geometry>
+            <material name="">
+                <color rgba="0.592156862745098 0.666666666666667 0.682352941176471 1" />
+            </material>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <mesh filename="package://dofbot_info/meshes/link4.STL" />
+            </geometry>
+        </collision>
+    </link>
+    <joint name="joint4" type="revolute">
+        <origin xyz="-0.08285 0 0" rpy="0 0 0.0083081" />
+        <parent link="link3" />
+        <child link="link4" />
+        <axis xyz="0 0 1" />
+        <limit effort="30" velocity="1.0" lower="-1.5708" upper="1.5708"/>
+    </joint>
+    <!-- link5 -->
+    <link name="link5">
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://dofbot_info/meshes/link5.STL"/>
+            </geometry>
+            <material name="">
+                <color rgba="1 1 1 1" />
+            </material>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <mesh filename="package://dofbot_info/meshes/link5.STL" />
+            </geometry>
+        </collision>
+    </link>
+    <!-- joint5 -->
+    <joint name="joint5" type="revolute">
+        <origin xyz="-0.07385 -0.001 0" rpy="0 -1.57 0"/>
+        <axis xyz="0 0 1"/>
+        <parent link="link4"/>
+        <child link="link5"/>
+        <limit effort="30" velocity="1.0" lower="-1.5708" upper="3.1416"/>
+    </joint>
+</robot>
