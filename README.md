@@ -150,6 +150,42 @@ python omniisaacgymenvs/scripts/rlgames_train.py task=DofbotReacher test=True nu
 
 Likewise, you can decrease the number of environments by modifying the parameter `num_envs=512`.
 
+## Using the Official URDF File
+
+The official URDF file in `/thirdparty/dofbot_info` is provided by Yahboom. The details on how to download this file can be found in the commit message of [e866618](https://github.com/j3soon/OmniIsaacGymEnvs-DofbotReacher/commit/e86661813cd941133b4dc68da4c20a21efa00a0b).
+
+The only additional step is to generate [instanceable](https://docs.omniverse.nvidia.com/isaacsim/latest/isaac_gym_tutorials/tutorial_gym_instanceable_assets.html) Dofbot assets based on the official URDF file:
+
+[Launch the Script Editor](https://docs.omniverse.nvidia.com/app_isaacsim/app_isaacsim/tutorial_gui_interactive_scripting.html#script-editor) in Isaac Sim. Copy the content in `omniisaacgymenvs/utils/usd_utils/create_instanceable_dofbot_from_urdf.py` and execute it inside the Script Editor window. Wait until you see the text `Done!`.
+
+You can now use the official URDF file by appending the `use_urdf=True` flag to any command above. For example:
+
+- Try out the dummy policy script with the official URDF file:
+
+  ```sh
+  cd ~/OmniIsaacGymEnvs-DofbotReacher
+  python omniisaacgymenvs/scripts/dummy_dofbot_policy.py task=DofbotReacher test=True num_envs=1 use_urdf=True
+  ```
+
+- Or download the pre-trained model checkpoint and run it:
+
+  ```sh
+  cd ~/OmniIsaacGymEnvs-DofbotReacher
+  wget https://github.com/j3soon/OmniIsaacGymEnvs-DofbotReacher/releases/download/v1.2.0/runs_urdf.zip
+  unzip runs_urdf.zip
+  ```
+
+  ```sh
+  cd ~/OmniIsaacGymEnvs-DofbotReacher
+  python omniisaacgymenvs/scripts/rlgames_train.py task=DofbotReacher test=True num_envs=512 checkpoint=./runs_urdf/DofbotReacher/nn/DofbotReacher.pth use_urdf=True
+  ```
+
+  Please note that the model trained with the USD file provided by Isaac Sim is not compatible with the official URDF file. Fortunately, we also provide a pre-trained checkpoint for the official URDF file.
+
+  The learning curve of the pre-trained model:
+
+  ![](docs/media/DofbotReacher-URDF-Learning-Curve.png)
+
 ## Sim2Real
 
 The learned policy has a very conservative constraint on the joint limits. Therefore, the gripper would not hit the ground under such limits. However, you should still make sure there are no other obstacles within Dofbot's workspace (reachable area). That being said, if things go wrong, press `Ctrl+C` twice in the terminal to kill the process.
