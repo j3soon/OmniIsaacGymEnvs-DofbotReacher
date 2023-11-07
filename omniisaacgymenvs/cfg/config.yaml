@@ -72,3 +72,4 @@ hydra:
   run:
     dir: .
 
+use_urdf: False

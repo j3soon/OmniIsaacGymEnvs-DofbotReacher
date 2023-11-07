@@ -45,6 +45,8 @@ env:
   printNumSuccesses: False
   maxConsecutiveSuccesses: 0
 
+  useURDF: ${resolve_default:False,${...use_urdf}}
+
 sim:
   dt: 0.0083 # 1/120 s
   add_ground_plane: True

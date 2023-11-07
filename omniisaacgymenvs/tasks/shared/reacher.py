@@ -228,7 +228,7 @@ class ReacherTask(RLTask):
         self.prev_targets = torch.zeros((self.num_envs, self.num_arm_dofs), dtype=torch.float, device=self.device)
         self.cur_targets = torch.zeros((self.num_envs, self.num_arm_dofs), dtype=torch.float, device=self.device)
 
-        dof_limits = self._dof_limits
+        dof_limits = self._dof_limits[:, :self.num_arm_dofs]
         self.arm_dof_lower_limits, self.arm_dof_upper_limits = torch.t(dof_limits[0].to(self.device))
 
         self.arm_dof_default_pos = torch.zeros(self.num_arm_dofs, dtype=torch.float, device=self.device)
@@ -334,7 +334,7 @@ class ReacherTask(RLTask):
             )
         else:
             self.cur_targets[:, self.actuated_dof_indices] = scale(
-                self.actions,
+                self.actions[:, :self.num_arm_dofs],
                 self.arm_dof_lower_limits[self.actuated_dof_indices],
                 self.arm_dof_upper_limits[self.actuated_dof_indices],
             )

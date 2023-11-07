@@ -97,6 +97,7 @@ class DofbotReacherTask(ReacherTask):
         # The last action space cannot be [0, 0]
         # It will introduce the following error:
         # ValueError: Expected parameter loc (Tensor of shape (2048, 6)) of distribution Normal(loc: torch.Size([2048, 6]), scale: torch.Size([2048, 6])) to satisfy the constraint Real(), but found invalid values
+        self.useURDF = self._task_cfg["env"]["useURDF"]
 
         # Setup Sim2Real
         sim2real_config = self._task_cfg['sim2real']
@@ -110,13 +111,18 @@ class DofbotReacherTask(ReacherTask):
         ReacherTask.update_config(self)
 
     def get_num_dof(self):
-        assert self._arms.num_dof == 11
-        return 6
+        # assert self._arms.num_dof == 11
+        return min(self._arms.num_dof, 6)
 
     def get_arm(self):
+        if not self.useURDF:
+            usd_path = "omniverse://localhost/Projects/J3soon/Isaac/2023.1.0/Isaac/Robots/Dofbot/dofbot_instanceable.usd"
+        else:
+            usd_path = "omniverse://localhost/Projects/J3soon/Isaac/2023.1.0/Isaac/Robots/Dofbot/dofbot_urdf_instanceable.usd"
         dofbot = Dofbot(
             prim_path=self.default_zero_env_path + "/Dofbot",
             name="Dofbot",
+            usd_path=usd_path
         )
         self._sim_config.apply_articulation_settings(
             "dofbot",
@@ -125,7 +131,15 @@ class DofbotReacherTask(ReacherTask):
         )
 
     def get_arm_view(self, scene):
-        arm_view = DofbotView(prim_paths_expr="/World/envs/.*/Dofbot", name="dofbot_view")
+        if not self.useURDF:
+            end_effector_prim_paths_expr = "/World/envs/.*/Dofbot/link5/Wrist_Twist"
+        else:
+            end_effector_prim_paths_expr = "/World/envs/.*/Dofbot/link5"
+        arm_view = DofbotView(
+            prim_paths_expr="/World/envs/.*/Dofbot",
+            end_effector_prim_paths_expr=end_effector_prim_paths_expr,
+            name="dofbot_view"
+        )
         scene.add(arm_view._end_effectors)
         return arm_view
 

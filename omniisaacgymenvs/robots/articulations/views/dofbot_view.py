@@ -40,13 +40,18 @@ class DofbotView(ArticulationView):
     def __init__(
         self,
         prim_paths_expr: str,
+        end_effector_prim_paths_expr: str,
         name: Optional[str] = "DofbotView",
     ) -> None:
 
         super().__init__(prim_paths_expr=prim_paths_expr, name=name, reset_xform_properties=False)
 
         # Use RigidPrimView instead of XFormPrimView, since the XForm is not updated when running
-        self._end_effectors = RigidPrimView(prim_paths_expr="/World/envs/.*/Dofbot/link5/Wrist_Twist", name="end_effector_view", reset_xform_properties=False)
+        self._end_effectors = RigidPrimView(
+            prim_paths_expr=end_effector_prim_paths_expr,
+            name="end_effector_view",
+            reset_xform_properties=False
+        )
 
     def initialize(self, physics_sim_view):
         super().initialize(physics_sim_view)

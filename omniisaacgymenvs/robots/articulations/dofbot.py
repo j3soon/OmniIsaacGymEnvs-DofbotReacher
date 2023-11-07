@@ -57,7 +57,6 @@ class Dofbot(Robot):
             assets_root_path = get_assets_root_path()
             if assets_root_path is None:
                 carb.log_error("Could not find Isaac Sim assets folder")
-            self._usd_path = "omniverse://localhost/Projects/J3soon/Isaac/2023.1.0/Isaac/Robots/Dofbot/dofbot_instanceable.usd"
 
         self._position = torch.tensor([0.0, 0.0, 0.0]) if translation is None else translation
         self._orientation = torch.tensor([1.0, 0.0, 0.0, 0.0]) if orientation is None else orientation
