@@ -48,7 +48,6 @@ def create_dofbot_from_urdf(urdf_path, usd_path, mesh_usd_path, instanceable_usd
     import_config.make_default_prim = True
     import_config.self_collision = False
     import_config.create_physics_scene = True
-    import_config.import_inertia_tensor = False
     # The two values below follows the Dofbot USD file provided by NVIDIA
     # Joint 5 should be damping = 10, stiffness = 1000, but we ignore it for now
     import_config.default_drive_strength = 1048.0

@@ -1,11 +1,14 @@
 # Dofbot Reacher Reinforcement Learning Sim2Real Environment for Omniverse Isaac Gym/Sim
 
-This repository adds a DofbotReacher environment based on [OmniIsaacGymEnvs](https://github.com/NVIDIA-Omniverse/OmniIsaacGymEnvs) (commit [d0eaf2e](https://github.com/NVIDIA-Omniverse/OmniIsaacGymEnvs/tree/d0eaf2e7f1e1e901d62e780392ca77843c08eb2c)), and includes Sim2Real code to control a real-world [Dofbot](https://category.yahboom.net/collections/r-robotics-arm/products/dofbot-jetson_nano) with the policy learned by reinforcement learning in Omniverse Isaac Gym/Sim.
+This repository adds a DofbotReacher environment based on [OmniIsaacGymEnvs](https://github.com/NVIDIA-Omniverse/OmniIsaacGymEnvs) (commit [cc1aab0](https://github.com/NVIDIA-Omniverse/OmniIsaacGymEnvs/tree/cc1aab0f904ade860fc0761d62edb6e706ab89ec)), and includes Sim2Real code to control a real-world [Dofbot](https://category.yahboom.net/collections/r-robotics-arm/products/dofbot-jetson_nano) with the policy learned by reinforcement learning in Omniverse Isaac Gym/Sim.
 
 - We suggest using [the isaac-sim-2022.1.1 branch](https://github.com/j3soon/OmniIsaacGymEnvs-DofbotReacher/tree/isaac-sim-2022.1.1) to prevent any potential issues. The RL code is tested on both Windows and Linux, while the Sim2Real code is tested on Linux and a real Dofbot using Isaac Sim 2022.1.1 and ROS Melodic.
 - **WARNING**: The RL code in this branch is only tested on Linux using Isaac Sim 2023.1.0. The Sim2Real code isn't fully tested yet.
 
-This repo is compatible with [OmniIsaacGymEnvs-UR10Reacher](https://github.com/j3soon/OmniIsaacGymEnvs-UR10Reacher).
+This repo is compatible with the following repositories:
+- [OmniIsaacGymEnvs-DofbotReacher](https://github.com/j3soon/OmniIsaacGymEnvs-DofbotReacher)
+- [OmniIsaacGymEnvs-UR10Reacher](https://github.com/j3soon/OmniIsaacGymEnvs-UR10Reacher)
+- [OmniIsaacGymEnvs-KukaReacher](https://github.com/j3soon/OmniIsaacGymEnvs-KukaReacher)
 
 ## Preview
 

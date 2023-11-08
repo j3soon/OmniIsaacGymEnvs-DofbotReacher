@@ -140,8 +140,12 @@ class ReacherTask(RLTask):
     def initialize_views(self, scene):
         RLTask.initialize_views(self, scene)
 
+        if scene.object_exists("dofbot_view"):
+            scene.remove_object("dofbot_view", registry_only=True)
         if scene.object_exists("ur10_view"):
             scene.remove_object("ur10_view", registry_only=True)
+        if scene.object_exists("kuka_view"):
+            scene.remove_object("kuka_view", registry_only=True)
         if scene.object_exists("goal_view"):
             scene.remove_object("goal_view", registry_only=True)
         if scene.object_exists("object_view"):
