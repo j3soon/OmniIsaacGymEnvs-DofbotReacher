@@ -186,25 +186,16 @@ def create_dofbot_instanceable(dofbot_mesh_usd_path, dofbot_instanceable_usd_pat
     omni.usd.get_context().save_stage()
 
 def create_block_indicator():
-    asset_usd_path = 'omniverse://localhost/NVIDIA/Assets/Isaac/2023.1.0/Isaac/Props/Blocks/block.usd'
-    block_usd_path = 'omniverse://localhost/Projects/J3soon/Isaac/2023.1.0/Isaac/Props/Blocks/block.usd'
-    omni.client.copy(asset_usd_path, block_usd_path)
-    omni.usd.get_context().open_stage(block_usd_path)
-    stage = omni.usd.get_context().get_stage()
-    edits = Sdf.BatchNamespaceEdit()
-    edits.Add(Sdf.NamespaceEdit.Remove('/object/object/collisions'))
-    stage.GetRootLayer().Apply(edits)
-    omni.usd.get_context().save_stage()
-
-    asset_usd_path = 'omniverse://localhost/NVIDIA/Assets/Isaac/2023.1.0/Isaac/Props/Blocks/block_instanceable.usd'
-    block_usd_path = 'omniverse://localhost/Projects/J3soon/Isaac/2023.1.0/Isaac/Props/Blocks/block_instanceable.usd'
-    omni.client.copy(asset_usd_path, block_usd_path)
-    omni.usd.get_context().open_stage(block_usd_path)
-    stage = omni.usd.get_context().get_stage()
-    edits = Sdf.BatchNamespaceEdit()
-    edits.Add(Sdf.NamespaceEdit.Remove('/object/object/collisions'))
-    stage.GetRootLayer().Apply(edits)
-    omni.usd.get_context().save_stage()
+    for suffix in ['', '_instanceable']:
+        asset_usd_path = f'omniverse://localhost/NVIDIA/Assets/Isaac/2023.1.0/Isaac/Props/Blocks/block{suffix}.usd'
+        block_usd_path = f'omniverse://localhost/Projects/J3soon/Isaac/2023.1.0/Isaac/Props/Blocks/block{suffix}.usd'
+        omni.client.copy(asset_usd_path, block_usd_path)
+        omni.usd.get_context().open_stage(block_usd_path)
+        stage = omni.usd.get_context().get_stage()
+        edits = Sdf.BatchNamespaceEdit()
+        edits.Add(Sdf.NamespaceEdit.Remove('/object/object/collisions'))
+        stage.GetRootLayer().Apply(edits)
+        omni.usd.get_context().save_stage()
 
 if __name__ == '__main__':
     asset_usd_path = 'omniverse://localhost/NVIDIA/Assets/Isaac/2023.1.0/Isaac/Robots/Dofbot/dofbot.usd'

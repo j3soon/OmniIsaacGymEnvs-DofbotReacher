@@ -68,10 +68,23 @@ def create_dofbot_from_urdf(urdf_path, usd_path, mesh_usd_path, instanceable_usd
         import_config=import_config, dest_path=instanceable_usd_path,
     )
 
+def create_block_indicator():
+    for suffix in ['', '_instanceable']:
+        asset_usd_path = f'omniverse://localhost/NVIDIA/Assets/Isaac/2023.1.0/Isaac/Props/Blocks/block{suffix}.usd'
+        block_usd_path = f'omniverse://localhost/Projects/J3soon/Isaac/2023.1.0/Isaac/Props/Blocks/block{suffix}.usd'
+        omni.client.copy(asset_usd_path, block_usd_path)
+        omni.usd.get_context().open_stage(block_usd_path)
+        stage = omni.usd.get_context().get_stage()
+        edits = Sdf.BatchNamespaceEdit()
+        edits.Add(Sdf.NamespaceEdit.Remove('/object/object/collisions'))
+        stage.GetRootLayer().Apply(edits)
+        omni.usd.get_context().save_stage()
+
 if __name__ == '__main__':
     dofbot_urdf_path = f'{os.path.expanduser("~")}/OmniIsaacGymEnvs-DofbotReacher/thirdparty/dofbot_info/urdf/dofbot.urdf'
     dofbot_usd_path = 'omniverse://localhost/Projects/J3soon/Isaac/2023.1.0/Isaac/Robots/Dofbot/dofbot_urdf.usd'
     dofbot_mesh_usd_path = 'omniverse://localhost/Projects/J3soon/Isaac/2023.1.0/Isaac/Robots/Dofbot/dofbot_urdf_instanceable_meshes.usd'
     dofbot_instanceable_usd_path = 'omniverse://localhost/Projects/J3soon/Isaac/2023.1.0/Isaac/Robots/Dofbot/dofbot_urdf_instanceable.usd'
     create_dofbot_from_urdf(dofbot_urdf_path, dofbot_usd_path, dofbot_mesh_usd_path, dofbot_instanceable_usd_path)
+    create_block_indicator()
     print("Done!")
