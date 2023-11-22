@@ -146,6 +146,8 @@ class ReacherTask(RLTask):
             scene.remove_object("ur10_view", registry_only=True)
         if scene.object_exists("kuka_view"):
             scene.remove_object("kuka_view", registry_only=True)
+        if scene.object_exists("hiwin_view"):
+            scene.remove_object("hiwin_view", registry_only=True)
         if scene.object_exists("goal_view"):
             scene.remove_object("goal_view", registry_only=True)
         if scene.object_exists("object_view"):

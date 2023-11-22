@@ -9,6 +9,7 @@ This repo is compatible with the following repositories:
 - [OmniIsaacGymEnvs-DofbotReacher](https://github.com/j3soon/OmniIsaacGymEnvs-DofbotReacher)
 - [OmniIsaacGymEnvs-UR10Reacher](https://github.com/j3soon/OmniIsaacGymEnvs-UR10Reacher)
 - [OmniIsaacGymEnvs-KukaReacher](https://github.com/j3soon/OmniIsaacGymEnvs-KukaReacher)
+- [OmniIsaacGymEnvs-HiwinReacher](https://github.com/j3soon/OmniIsaacGymEnvs-HiwinReacher)
 
 ## Preview
 
