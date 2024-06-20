@@ -101,7 +101,8 @@ class DofbotReacherTask(ReacherTask):
 
         # Setup Sim2Real
         sim2real_config = self._task_cfg['sim2real']
-        if sim2real_config['enabled'] and self.test and self.num_envs == 1:
+        if sim2real_config['enabled']:
+        #if sim2real_config['enabled'] and self.test and self.num_envs == 1:
             self.real_world_dofbot = RealWorldDofbot(
                 sim2real_config['ip'],
                 sim2real_config['port'],
